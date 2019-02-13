@@ -320,12 +320,12 @@ public class ADIS16448_IMU extends GyroBase implements Gyro, PIDSource, Sendable
     
     m_freed.set(false);
     m_acquire_task = new Thread(new AcquireTask(this));
-    m_acquire_task.setDaemon(true);
+    //m_acquire_task.setDaemon(true);
     m_acquire_task.start();
 
     // Start AHRS processing
     m_calculate_task = new Thread(new CalculateTask(this));
-    m_calculate_task.setDaemon(true);
+    //m_calculate_task.setDaemon(true);
     m_calculate_task.start();
     
     calibrate();
@@ -566,6 +566,8 @@ public class ADIS16448_IMU extends GyroBase implements Gyro, PIDSource, Sendable
           + ToUShort(data_subset[26], data_subset[27]));*/
           //System.out.println("---------------------"); // Frame divider (or else data looks like a mess)
           
+          long preSample = System.currentTimeMillis();
+
           m_samples_mutex.lock();
           try{
             // If the FIFO is full, just drop it
@@ -596,6 +598,8 @@ public class ADIS16448_IMU extends GyroBase implements Gyro, PIDSource, Sendable
             m_samples_mutex.unlock();
           }
 
+          long postSample = System.currentTimeMillis();
+
           // Update global state
           synchronized(this){
             m_gyro_x = gyro_x;
@@ -620,6 +624,8 @@ public class ADIS16448_IMU extends GyroBase implements Gyro, PIDSource, Sendable
             m_integ_gyro_z += (gyro_z - m_gyro_offset_z) * dt;
             
           }
+
+          long postSync = System.currentTimeMillis();
         }else{
           System.out.println("Invalid CRC");
         }
